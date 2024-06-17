@@ -27,13 +27,20 @@ public class CompraBilleteTrenException extends SQLException {
 	private String mensaje;
 
 	public CompraBilleteTrenException(int code) {
-		/*
-		 * A completar por el alumno
-		 */
-
+		this.codigo = code;
+		switch (code) {
+			case NO_PLAZAS:
+				this.mensaje = "No hay plazas suficientes.";
+				break;
+			case NO_EXISTE_VIAJE:
+				this.mensaje = "No existe viaje para tal fecha, hora, origen y destino.";
+				break;
+			default:
+				this.mensaje = "Error desconocido.";
+		}
 		LOGGER.debug(mensaje);
 
-		// Traza_de_pila
+		// Traza de pila
 		for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
 			LOGGER.debug(ste.toString());
 		}
