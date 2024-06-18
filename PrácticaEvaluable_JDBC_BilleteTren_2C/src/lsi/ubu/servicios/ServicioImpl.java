@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Date;
-
+import lsi.ubu.excepciones.CompraBilleteTrenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
