@@ -1,5 +1,5 @@
 package lsi.ubu.servicios;
-//COMENTARIO DE PRUEBA
+//COMENTARIO DE PRUEBAs
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
