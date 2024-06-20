@@ -1,8 +1,6 @@
 /*
- * Nombre: Tests
- * Descripción: Clase para poder comprobar el correcto funcionamiento de compras
- * y anulaciones de billetes de tren.
- * Autores: Álvaro Villar, David Ibeas y Aitor Blanco.
+ * Autor: Victor Gonzalez Del Campo.
+ * Versión: 1.0
  */
 
 package lsi.ubu.tests;

@@ -1,6 +1,4 @@
 /*
- * Nombre: CompraBilleteTrenException
- * Descripción: Clase de excepciones personalizadas para la compra de billetes de tren
  * Autor: Victor Gonzalez Del Campo
  * Versión: 1.0
  */

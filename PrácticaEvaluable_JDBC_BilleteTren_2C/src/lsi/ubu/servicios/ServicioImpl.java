@@ -1,6 +1,4 @@
 /*
- * Nombre: ServicioImpl
- * Descripción: Clase para gestionar la compra y anulación de billetes de tren.
  * Autor: Victor Gonzalez Del Campo.
  * Versión: 1.0
  */
@@ -21,6 +19,84 @@ public class ServicioImpl implements Servicio {
 
 	// Logger para registrar la actividad de la clase.
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServicioImpl.class);
+
+	// Método que implementa la lógica de modificación de billetes de tren.
+	@Override
+	public void modificarBillete(int billeteId, int nuevoNroPlazas) throws SQLException {
+		PoolDeConexiones pool = PoolDeConexiones.getInstance();
+		Connection con = null;
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		int precioActual;
+		int idViaje;
+		int nplazas;
+		int plazasReservadas;
+		try {
+			// Obtenemos una conexión del pool.
+			con = pool.getConnection();
+			// Consulta para obtener la información del billete actual.
+			String select_ticket = "SELECT IDVIAJE, CANTIDAD, PRECIO FROM tickets WHERE IDTICKET = ?";
+			st = con.prepareStatement(select_ticket);
+			st.setInt(1, billeteId);
+			rs = st.executeQuery();
+			// Verificamos si el billete existe.
+			if (rs.next()) {
+				idViaje = rs.getInt("IDVIAJE");
+				plazasReservadas = rs.getInt("CANTIDAD");
+				precioActual = rs.getInt("PRECIO");
+			} else {
+				// Creamos y lanzamos la excepción correspondiente.
+				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_TICKET);
+				throw (e);
+			}
+			// Consulta para obtener el número de plazas libres del viaje.
+			String select_viaje = "SELECT NPLAZASLIBRES FROM viajes WHERE IDVIAJE = ?";
+			st = con.prepareStatement(select_viaje);
+			st.setInt(1, idViaje);
+			rs = st.executeQuery();
+			if (rs.next()) {
+				nplazas = rs.getInt("NPLAZASLIBRES");
+			} else {
+				// Creamos y lanzamos la excepción correspondiente.
+				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXISTE_VIAJE);
+				throw (e);
+			}
+			// Verificamos si es posible realizar la modificación.
+			int diferenciaPlazas = nuevoNroPlazas - plazasReservadas;
+			if (diferenciaPlazas > 0 && diferenciaPlazas > nplazas) {
+				// Creamos y lanzamos la excepción correspondiente.
+				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_PLAZAS);
+				throw (e);
+			} else if (nuevoNroPlazas < 0) {
+				// Creamos y lanzamos la excepción correspondiente.
+				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_RESERVAS);
+				throw (e);
+			}
+			// Actualizamos el número de plazas libres del viaje.
+			st = con.prepareStatement("UPDATE viajes SET NPLAZASLIBRES = ? WHERE IDVIAJE = ?");
+			st.setInt(1, nplazas - diferenciaPlazas);
+			st.setInt(2, idViaje);
+			st.executeUpdate();
+			// Actualizamos el ticket con el nuevo número de plazas y el precio actualizado.
+			int nuevoPrecio = (precioActual / plazasReservadas) * nuevoNroPlazas;
+			st = con.prepareStatement("UPDATE tickets SET CANTIDAD = ?, PRECIO = ? WHERE IDTICKET = ?");
+			st.setInt(1, nuevoNroPlazas);
+			st.setInt(2, nuevoPrecio);
+			st.setInt(3, billeteId);
+			st.executeUpdate();
+			// Hacemos commit para confirmar los cambios.
+			con.commit();
+		} catch (SQLException e) {
+			con.rollback();
+			LOGGER.error(e.getMessage()); // Registramos el mensaje de error
+			throw (e); // Relanzamos la excepción
+		} finally {
+			// Cerramos las conexiones y liberamos recursos.
+			if (rs != null) rs.close();
+			if (st != null) st.close();
+			if (con != null) con.close();
+		}
+	}
 
 	// Método que implementa la lógica de anulación de billetes de tren.
 	@Override
