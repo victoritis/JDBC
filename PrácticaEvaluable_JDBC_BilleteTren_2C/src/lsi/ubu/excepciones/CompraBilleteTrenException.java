@@ -8,13 +8,7 @@ import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * CompraBilleteTrenException: Implementa las excepciones específicas de la transacción de compra de billetes de tren
- *
- * @autor <a href="mailto:victor@example.com">Victor Gonzalez Del Campo</a>
- * @versión 1.0
- * @desde 1.0
- */
+
 public class CompraBilleteTrenException extends SQLException {
 
 	private static final long serialVersionUID = 1L;
