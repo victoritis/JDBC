@@ -41,5 +41,7 @@ public class CompraBilleteTren {
 		tests.ejecutarTestsAnularBilletes();
 
 		LOGGER.info("Fin de los tests");
+
+		//QUEDA DE AÑADIR PARA QUE EJECUTE EL TEST DE MODIFICAR BILLETE
 	}
 }
