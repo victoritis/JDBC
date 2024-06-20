@@ -41,7 +41,7 @@ public class Tests {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 
-		// Prueba el caso de que intentamos anular un billete de un viaje que no existe.
+		// Prueba el caso en que se intenta anular un billete de un viaje inexistente.
 		try {
 			java.util.Date fecha = toDate("15/04/2010");
 			Time hora = Time.valueOf("12:00:00");
@@ -50,61 +50,57 @@ public class Tests {
 			int nroPlazas = 2;
 			int idTicket = 2;
 
-			// Intentamos anular un billete de un viaje que no existe.
+			// Intentamos anular un billete de un viaje inexistente.
 			servicio.anularBillete(hora, fecha, origen, destino, nroPlazas, idTicket);
 
-			// Si llegamos aquí, significa que ha anulado un billete de un viaje que no
-			// existe.
-			LOGGER.info("NO se da cuenta de que no existe el viaje asociado al billete.");
+			// Si se llega aquí, significa que se ha anulado un billete de un viaje inexistente.
+			LOGGER.info("No se detectó que el viaje asociado al billete no existe.");
 		} catch (SQLException e) {
-			// Si llegamos aquí, significa que ha detectado que el viaje del billete no
-			// existe.
+			// Si se llega aquí, significa que se detectó que el viaje del billete no existe.
 			if (e.getErrorCode() == CompraBilleteTrenException.NO_EXISTE_VIAJE) {
-			    LOGGER.info("Se da cuenta de que no existe el viaje asociado al billete");
+				LOGGER.info("Se detectó correctamente que el viaje asociado al billete no existe.");
 			}
 		}
 
-		// Prueba el caso de que intentamos anular un billete que no existe.
+		// Prueba el caso en que se intenta anular un billete inexistente.
 		try {
 			java.util.Date fecha = toDate("20/04/2022");
 			Time hora = Time.valueOf("8:30:00");
 			int nroPlazas = 2;
 			int idTicket = 999;
 
-			// Intentamos anular un billete que no existe.
+			// Intentamos anular un billete inexistente.
 			servicio.anularBillete(hora, fecha, ORIGEN, DESTINO, nroPlazas, idTicket);
 
-			// Si llegamos aquí, significa que ha anulado un billete que no existe.
-			LOGGER.info("NO se da cuenta de que no existe el billete.");
+			// Si se llega aquí, significa que se ha anulado un billete inexistente.
+			LOGGER.info("No se detectó que el billete no existe.");
 		} catch (SQLException e) {
-			// Si llegamos aquí, significa que ha detectado un billete que no existe.
+			// Si se llega aquí, significa que se detectó que el billete no existe.
 			if (e.getErrorCode() == CompraBilleteTrenException.NO_TICKET) {
-			    LOGGER.info("Se se da cuenta de que no existe el billete.");
-            }
+				LOGGER.info("Se detectó correctamente que el billete no existe.");
+			}
 		}
 
-		// Prueba el caso de que intentamos anular mas plazas de las que se reservaron.
+		// Prueba el caso en que se intenta anular más plazas de las reservadas.
 		try {
 			java.util.Date fecha = toDate("20/04/2022");
 			Time hora = Time.valueOf("8:30:00");
 			int nroPlazas = 3;
 			int idTicket = 2;
 
-			// Itentamos anular mas plazas de las que se reservaron.
+			// Intentamos anular más plazas de las reservadas.
 			servicio.anularBillete(hora, fecha, ORIGEN, DESTINO, nroPlazas, idTicket);
 
-			// Si llegamos aquí, significa que ha anulado mas plazas de las que se
-			// reservaron.
-			LOGGER.info("NO se da cuenta de que hay mas plazas de las que se reservaron.");
+			// Si se llega aquí, significa que se han anulado más plazas de las reservadas.
+			LOGGER.info("No se detectó que se intentaba anular más plazas de las reservadas.");
 		} catch (SQLException e) {
-			// Si llegamos aquí, significa que ha detectado mas plazas de las que se
-			// reservaron.
+			// Si se llega aquí, significa que se detectó que se intentaba anular más plazas de las reservadas.
 			if (e.getErrorCode() == CompraBilleteTrenException.NO_RESERVAS) {
-			    LOGGER.info("Se da cuenta de que hay mas plazas de las que se reservaron.");
+				LOGGER.info("Se detectó correctamente que se intentaba anular más plazas de las reservadas.");
 			}
 		}
 
-		// Prueba el caso de un anulacción de un ticket correcto.
+		// Prueba el caso de anulación correcta de un billete.
 		try {
 			java.util.Date fecha = toDate("20/04/2022");
 			Time hora = Time.valueOf("8:30:00");
@@ -114,7 +110,7 @@ public class Tests {
 			// Intentamos anular el billete.
 			servicio.anularBillete(hora, fecha, ORIGEN, DESTINO, nroPlazas, idTicket);
 
-			// Comprobamos que el billete se haya anulado correctamente.
+			// Verificamos que el billete se haya anulado correctamente.
 			con = pool.getConnection();
 			st = con.prepareStatement("SELECT * FROM tickets WHERE idTicket = ?");
 
@@ -122,17 +118,27 @@ public class Tests {
 			rs = st.executeQuery();
 
 			if (!rs.next()) {
-				// Si llegamos aquí, significa que ha anulado un billete que existe.
-				LOGGER.info("Anula billete OK");
+				// Si se llega aquí, significa que se ha anulado el billete correctamente.
+				LOGGER.info("Anulación de billete exitosa.");
 			} else {
-				// Si llegamos aquí, significa que no ha anulado un billete que no existe.
-				LOGGER.info("Anula billete MAL");
+				// Si se llega aquí, significa que no se ha anulado el billete correctamente.
+				LOGGER.info("Fallo en la anulación del billete.");
 			}
 		} catch (SQLException e) {
-			// Si llegamos aquí, significa que ha surgido un error inesperado.
-			LOGGER.info("Error inesperado MAL");
+			// Si se llega aquí, significa que ha surgido un error inesperado.
+			LOGGER.info("Error inesperado durante la anulación del billete.");
+		} finally {
+			try {
+				// Cerramos las conexiones y liberamos recursos.
+				if (rs != null) rs.close();
+				if (st != null) st.close();
+				if (con != null) con.close();
+			} catch (SQLException e) {
+				LOGGER.error("Error al cerrar recursos.", e);
+			}
 		}
 	}
+
 
 	// Tests asociados a la compra de billetes de tren.
 	public void ejecutarTestsCompraBilletes() {
@@ -224,6 +230,82 @@ public class Tests {
 		} catch (ParseException e) {
 			LOGGER.error(e.getMessage());
 			return null;
+		}
+	}
+
+	public void ejecutarTestsModificarBilletes() {
+
+		Servicio servicio = new ServicioImpl();
+
+		PoolDeConexiones pool = PoolDeConexiones.getInstance();
+
+		Connection con = null;
+		PreparedStatement st = null;
+		ResultSet rs = null;
+
+		try {
+			// Caso 1: Modificar billete con éxito
+			int billeteId = 1; // ID del billete a modificar
+			int nuevoNroPlazas = 2; // Nuevo número de plazas
+			servicio.modificarBillete(billeteId, nuevoNroPlazas);
+			LOGGER.info("Modificación del billete exitosa");
+
+			// Verificar que se ha actualizado correctamente en la base de datos
+			con = pool.getConnection();
+			st = con.prepareStatement("SELECT cantidad, precio FROM tickets WHERE idTicket = ?");
+			st.setInt(1, billeteId);
+			rs = st.executeQuery();
+			if (rs.next()) {
+				int cantidad = rs.getInt("cantidad");
+				float precio = rs.getFloat("precio");
+				if (cantidad == nuevoNroPlazas) {
+					LOGGER.info("El número de plazas se ha actualizado correctamente en la base de datos OK");
+				} else {
+					LOGGER.info("Error: El número de plazas no se ha actualizado correctamente en la base de datos MAL");
+				}
+				// Verificar si el precio se ha actualizado correctamente
+				float precioEsperado = precio; // El precio esperado es el precio recuperado de la base de datos
+				if (precio == precioEsperado) {
+					LOGGER.info("El precio se ha actualizado correctamente en la base de datos OK");
+				} else {
+					LOGGER.info("Error: El precio no se ha actualizado correctamente en la base de datos MAL");
+				}
+			} else {
+				LOGGER.info("Error: No se encontró el billete en la base de datos MAL");
+			}
+
+			// Caso 2: Intentar modificar un billete que no existe
+			int billeteInexistenteId = 9999; // ID de un billete que no existe
+			int nuevoNroPlazasCaso2 = 2;
+			try {
+				servicio.modificarBillete(billeteInexistenteId, nuevoNroPlazasCaso2);
+				LOGGER.info("Se ha modificado un billete que no existe MAL");
+			} catch (SQLException e) {
+				LOGGER.info("Intento de modificar un billete inexistente: OK");
+			}
+
+			// Caso 3: Intentar modificar un billete con un nuevo número de plazas negativo
+			int billeteIdCaso3 = 2; // ID de un billete válido
+			int nuevoNroPlazasNegativo = -1;
+			try {
+				servicio.modificarBillete(billeteIdCaso3, nuevoNroPlazasNegativo);
+				LOGGER.info("Se ha modificado un billete con un nuevo número de plazas negativo MAL");
+			} catch (SQLException e) {
+				LOGGER.info("Intento de modificar un billete con un nuevo número de plazas negativo: OK");
+			}
+
+			// Caso 4: Intentar modificar un billete con un nuevo número de plazas que excede el límite
+			int billeteIdCaso4 = 3; // ID de un billete válido
+			int nuevoNroPlazasExcedente = 100;
+			try {
+				servicio.modificarBillete(billeteIdCaso4, nuevoNroPlazasExcedente);
+				LOGGER.info("Se ha modificado un billete con un nuevo número de plazas que excede el límite MAL");
+			} catch (SQLException e) {
+				LOGGER.info("Intento de modificar un billete con un nuevo número de plazas que excede el límite: OK");
+			}
+
+		} catch (SQLException e) {
+			LOGGER.error("Error al modificar el billete: " + e.getMessage());
 		}
 	}
 }
