@@ -12,7 +12,7 @@ import lsi.ubu.util.ExecuteScript;
  *
  * AnularBillete: Anula la compra de un billete de Tren controlando si existe el
  * viaje y el ticket segun PDF de la carpeta enunciado
- * 
+ *
  * @author <a href="mailto:jmaudes@ubu.es">Jes�s Maudes</a>
  * @author <a href="mailto:rmartico@ubu.es">Ra�l Marticorena</a>
  * @author <a href="mailto:srarribas@ubu.es">Sandra Rodríguez</a>
@@ -30,6 +30,8 @@ public class CompraBilleteTren {
 		// Crear las tablas y filas en base de datos para la prueba
 		ExecuteScript.run("sql/CompraBilleteTren.sql");
 
+		System.out.println("TEST COMPRAR BILLETE");
+
 		// Ejecutar tests
 		Tests tests = new Tests();
 		tests.ejecutarTestsCompraBilletes();
@@ -37,11 +39,20 @@ public class CompraBilleteTren {
 		// Crear las tablas y filas en base de datos para la prueba
 		ExecuteScript.run("sql/CompraBilleteTren.sql");
 
+		System.out.println("TEST ANULAR BILLETE");
+
 		// Ejecutar tests
 		tests.ejecutarTestsAnularBilletes();
 
+		// Crear las tablas y filas en base de datos para la prueba
+		ExecuteScript.run("sql/CompraBilleteTren.sql");
+
+		System.out.println("TEST MODIFICAR BILLETE");
+
+		// Ejecutar tests
+		tests.ejecutarTestsModificarBilletes();
+
 		LOGGER.info("Fin de los tests");
 
-		//QUEDA DE AÑADIR PARA QUE EJECUTE EL TEST DE MODIFICAR BILLETE
 	}
 }
