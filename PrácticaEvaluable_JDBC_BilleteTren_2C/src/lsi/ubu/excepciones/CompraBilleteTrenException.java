@@ -1,5 +1,5 @@
 package lsi.ubu.excepciones;
-
+//Comenario de prueba
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
