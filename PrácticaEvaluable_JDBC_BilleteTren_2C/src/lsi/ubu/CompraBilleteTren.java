@@ -30,7 +30,7 @@ public class CompraBilleteTren {
 		// Crear las tablas y filas en base de datos para la prueba
 		ExecuteScript.run("sql/CompraBilleteTren.sql");
 
-		System.out.println("TEST COMPRAR BILLETE");
+		LOGGER.info("TEST COMPRAR BILLETE");
 
 		// Ejecutar tests
 		Tests tests = new Tests();
@@ -39,7 +39,7 @@ public class CompraBilleteTren {
 		// Crear las tablas y filas en base de datos para la prueba
 		ExecuteScript.run("sql/CompraBilleteTren.sql");
 
-		System.out.println("TEST ANULAR BILLETE");
+		LOGGER.info("TEST ANULAR BILLETE");
 
 		// Ejecutar tests
 		tests.ejecutarTestsAnularBilletes();
@@ -47,7 +47,7 @@ public class CompraBilleteTren {
 		// Crear las tablas y filas en base de datos para la prueba
 		ExecuteScript.run("sql/CompraBilleteTren.sql");
 
-		System.out.println("TEST MODIFICAR BILLETE");
+		LOGGER.info("TEST MODIFICAR BILLETE");
 
 		// Ejecutar tests
 		tests.ejecutarTestsModificarBilletes();
