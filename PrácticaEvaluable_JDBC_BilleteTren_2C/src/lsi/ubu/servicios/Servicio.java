@@ -10,6 +10,4 @@ public interface Servicio {
 
 	public void comprarBillete(Time p_hora, java.util.Date p_fecha, String p_origen, String p_destino, int p_nroPlazas)
 			throws SQLException;
-
-	public void modificarBillete(int billeteId, int nuevoNroPlazas) throws SQLException;
 }
