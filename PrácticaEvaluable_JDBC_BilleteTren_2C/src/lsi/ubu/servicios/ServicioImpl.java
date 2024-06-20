@@ -1,6 +1,6 @@
 /*
- * Autor: Victor Gonzalez Del Campo.
- * Versión: 1.0
+ * Autores:Victor Gozalez del Campo
+ * Ver: 0.3.1
  */
 package lsi.ubu.servicios;
 
@@ -10,14 +10,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import lsi.ubu.excepciones.CompraBilleteTrenException;
 import lsi.ubu.util.PoolDeConexiones;
 
 public class ServicioImpl implements Servicio {
 
-	// Logger para registrar la actividad de la clase.
+	// Logger.
 	private static final Logger LOGGER = LoggerFactory.getLogger(ServicioImpl.class);
 
 	// Método que implementa la lógica de modificación de billetes de tren.
@@ -98,15 +100,15 @@ public class ServicioImpl implements Servicio {
 		}
 	}
 
-	// Método que implementa la lógica de anulación de billetes de tren.
+	// Método que implementa la lógica de anular billetes de tren.
 	@Override
 	public void anularBillete(Time hora, java.util.Date fecha, String origen, String destino, int nroPlazas, int ticket)
 			throws SQLException {
 
-		// Obtenemos la instancia del pool de conexiones.
+		// Obtenemos la instancia asociada al pool de conexiones.
 		PoolDeConexiones pool = PoolDeConexiones.getInstance();
 
-		/* Conversiones de fecha y hora */
+		/* Conversiones de fechas y horas */
 		java.sql.Date fechaSqlDate = new java.sql.Date(fecha.getTime());
 		java.sql.Timestamp horaTimestamp = new java.sql.Timestamp(hora.getTime());
 
@@ -120,62 +122,62 @@ public class ServicioImpl implements Servicio {
 		int nplazas;
 		int plazasReservadas;
 
-		// Extraemos la hora en formato HH:MM.
+		// Dividimos el string de la hora para obtener solo la hora y los minutos.
 		String horaDef = hora.toString().substring(0, 5);
 
 		try {
-			// Tomamos una conexión del pool.
+			// Tomamos una conexión del pool de conexiones.
 			con = pool.getConnection();
 
-			// Consultas SQL para obtener y actualizar la información.
+			// Definimos las consultas para obtener la información necesaria y realizar las actualizaciones necesarias.
 			String select_viaje = "SELECT IDVIAJE, NPLAZASLIBRES " +
 					"FROM viajes a " +
 					"JOIN recorridos b ON a.IDRECORRIDO = b.IDRECORRIDO " +
 					"WHERE b.ESTACIONORIGEN = ? " +
 					"AND b.ESTACIONDESTINO = ? " +
 					"AND a.FECHA = ? " +
-					"AND trunc(b.horaSalida) = trunc(?)";
+					"AND TO_CHAR(b.horaSalida, 'HH24:MI') = ?";
 
 			String select_ticket = "SELECT CANTIDAD FROM tickets WHERE IDTICKET = ?";
 			String update_plazasLibres = "UPDATE viajes SET NPLAZASLIBRES = ? WHERE IDVIAJE = ?";
 			String update_cantidadTicket = "UPDATE tickets SET CANTIDAD = ? WHERE IDTICKET = ?";
 			String delete_ticket = "DELETE FROM tickets WHERE IDTICKET = ?";
 
-			// Obtenemos el ID del viaje y el número de plazas libres.
+			// Obtenemos el ID y el número de plazas libres del viaje.
 			st = con.prepareStatement(select_viaje);
 			st.setString(1, origen);
 			st.setString(2, destino);
 			st.setDate(3, fechaSqlDate);
-			st.setTimestamp(4, horaTimestamp);
+			st.setString(4, horaDef);
 			rs = st.executeQuery();
 
-			// Verificamos si el viaje existe.
+			// Comprobamos que existe el viaje asociado.
 			if (rs.next()) {
 				idViaje = rs.getInt(1);
 				nplazas = rs.getInt(2);
 			} else {
-				// Creamos y lanzamos la excepción correspondiente.
-				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXISTE_VIAJE);
-				throw (e);
+				// creamos la excepción para poderla lanzas y guardar su mensaje
+				CompraBilleteTrenException e=new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXISTE_VIAJE);
+				throw (e);//Lanzamos la excepción que hemos creado
 			}
 
 			// Obtenemos el número de plazas reservadas en el ticket.
 			st = con.prepareStatement(select_ticket);
 			st.setInt(1, ticket);
-			rs = st.executeQuery();
+			rs=st.executeQuery();
 
-			// Verificamos si el ticket existe y si es posible anular el número de plazas solicitado.
+			// Comprobamos si existe el ticket y si es posible anular ese número de plazas.
 			if (rs.next()) {
 				plazasReservadas = rs.getInt(1);
 				if (nroPlazas > plazasReservadas) {
-					// Creamos y lanzamos la excepción correspondiente.
-					CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_RESERVAS);
-					throw (e);
+					// creamos la excepción para poderla lanzas y guardar su mensaje
+					CompraBilleteTrenException e=new CompraBilleteTrenException(CompraBilleteTrenException.NO_RESERVAS);
+					throw (e);//Lanzamos la excepción que hemos creado
 				}
 			} else {
-				// Creamos y lanzamos la excepción correspondiente.
-				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_TICKET);
-				throw (e);
+				// creamos la excepción para poderla lanzas y guardar su mensaje
+				CompraBilleteTrenException e=new CompraBilleteTrenException(CompraBilleteTrenException.NO_TICKET);
+				throw (e);//Lanzamos la excepción que hemos creado
 			}
 
 			// Actualizamos el número de plazas libres del viaje.
@@ -185,34 +187,38 @@ public class ServicioImpl implements Servicio {
 			st.executeUpdate();
 
 			// Actualizamos la cantidad de plazas en el ticket.
-			if (rs.getInt("cantidad") - nroPlazas > 0) {
+			if(rs.getInt("cantidad")-nroPlazas>0){
 				st = con.prepareStatement(update_cantidadTicket);
-				st.setInt(1, rs.getInt("cantidad") - nroPlazas);
+				st.setInt(1, nroPlazas);
 				st.setInt(2, ticket);
 				st.executeUpdate();
 			}
-			// Si el ticket se queda sin plazas, lo eliminamos.
-			else if (rs.getInt("cantidad") - nroPlazas == 0) {
+
+			// Si el ticket se ha quedado sin plazas, procedemos a eliminarlo.
+			else if (rs.getInt("cantidad")-nroPlazas==0) {
 				st = con.prepareStatement(delete_ticket);
 				st.setInt(1, ticket);
 				st.executeUpdate();
 			}
 
-			// Hacemos commit para confirmar los cambios.
+			// Hacemos commit para guardar los cambios.
 			con.commit();
 		} catch (SQLException e) {
 			con.rollback();
-			LOGGER.error(e.getMessage()); // Registramos el mensaje de error
-			throw (e); // Relanzamos la excepción
+			LOGGER.error(e.getMessage()); //Gardamos el mensaje de error en el logger
+			st.close(); //cerramos la sentencia para liberar recursos
+			con.close(); //cerramos la conexion para liberar recursos
+			throw(e); //Volvemos a lanzar la excepci
 		} finally {
-			// Cerramos las conexiones y liberamos recursos.
+
+			// Cerramos las conexiones y liberamos los recursos.
 			if (rs != null) rs.close();
 			if (st != null) st.close();
 			if (con != null) con.close();
 		}
 	}
 
-	// Método que implementa la lógica de compra de billetes de tren.
+	// Método que implementa la lógica de comprar billetes de tren.
 	@Override
 	public void comprarBillete(Time hora, Date fecha, String origen, String destino, int nroPlazas)
 			throws SQLException {
@@ -220,6 +226,8 @@ public class ServicioImpl implements Servicio {
 
 		java.sql.Date fechaSqlDate = new java.sql.Date(fecha.getTime());
 		java.sql.Timestamp horaTimestamp = new java.sql.Timestamp(hora.getTime());
+		//SimpleDateFormat formatoFecha = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
 
 		Connection con = null;
 		PreparedStatement st = null;
@@ -227,72 +235,76 @@ public class ServicioImpl implements Servicio {
 		int precio;
 		int idViaje;
 		int nplazas;
-
-		// Extraemos la hora en formato HH:MM.
-		String horaDef = hora.toString().substring(0, 5);
-		con = pool.getConnection(); // Tomamos una conexión del pool
-
+		//Dividimos el string de la hora para obtener solo la hora y los minutos
+		String horaDef=hora.toString().substring(0,5);
+		con=pool.getConnection();//Tomamos una conexión del pool de conexiones
 		try {
-			// Consulta para encontrar el viaje solicitado por el usuario.
-			st = con.prepareStatement("SELECT PRECIO,IDVIAJE,NPLAZASLIBRES FROM viajes a JOIN recorridos b ON a.IDRECORRIDO = b.IDRECORRIDO "
-					+ "WHERE b.ESTACIONORIGEN = ? AND b.ESTACIONDESTINO = ? AND a.FECHA = ? AND trunc(b.horaSalida) = trunc(?)");
-			st.setString(1, origen); // Establecemos la ciudad de origen
-			st.setString(2, destino); // Establecemos la ciudad de destino
-			st.setDate(3, fechaSqlDate); // Establecemos la fecha de salida
-			st.setTimestamp(4, horaTimestamp); // Establecemos la hora de salida
-			rs = st.executeQuery(); // Ejecutamos la consulta
-
-		} catch (SQLException e) { // En caso de error SQL
-			con.rollback(); // Hacemos rollback de la transacción
-			LOGGER.error(e.getMessage()); // Registramos el mensaje de error
-			throw (e); // Relanzamos la excepción
+			//establecemos una sentencia preparada que unira las tablas de recorridos y viajes y enontrara el
+			//viaje que quiere el usuario y devuelve el precio, el id y el numero de plazas libres de viaje.
+			st=con.prepareStatement("SELECT PRECIO,IDVIAJE,NPLAZASLIBRES FROM viajes a JOIN recorridos b ON a.IDRECORRIDO = b.IDRECORRIDO WHERE b.ESTACIONORIGEN = ? AND b.ESTACIONDESTINO = ? AND a.FECHA = ? AND TO_CHAR(b.horaSalida, 'HH24:MI') = ?");
+			st.setString(1, origen);//rellenamos con la ciudad de origen que recibimos
+			st.setString(2, destino);//rellenamos con la ciudad de destino que recibimos
+			st.setDate(3,fechaSqlDate);//rellenamos con la fecha de salida que recibimos
+			st.setString(4, horaDef);//rellenamos con la hora que hemos recortado previamente
+			rs=st.executeQuery(); //ejecutamos la sentencia
+		}catch (SQLException e) {//en caso de que falle la ejecución de la sentencia  y salte un error sql
+			con.rollback();//Hacemos rollback por que ha saltado una exepción
+			LOGGER.error(e.getMessage()); //Gardamos el mensaje de error en el logger
+			st.close(); //cerramos la sentencia para liberar recursos
+			con.close(); //cerramos la conexion para liberar recursos
+			throw(e); //Volvemos a lanzar la excepción
 		}
+		if(!rs.next()) {//Si el result set esta vacio significa que no existe un viaje con esos parametros
+			con.rollback();//hacemos rollback ya que vamos a lanza una excepción
+			// creamos la excepción para poderla lanzas y guardar su mensaje
+			CompraBilleteTrenException e=new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXISTE_VIAJE);
+			LOGGER.error(e.getMessage());//Pasamos por el logger el mensaje de error
+			st.close(); //cerramos la sentencia para liberar recursos
+			con.close(); //cerramos la conexion para liberar recursos
+			throw (e);//Lanzamos la excepción que hemos creado
 
-		if (!rs.next()) { // Si no se encuentra un viaje con los parámetros proporcionados
-			con.rollback(); // Hacemos rollback
-			// Creamos y lanzamos la excepción correspondiente.
-			CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXISTE_VIAJE);
-			LOGGER.error(e.getMessage()); // Registramos el mensaje de error
-			throw (e);
+		}else {//en caso de que haya algo en el result set
 
-		} else { // Si se encuentra el viaje
-			precio = rs.getInt(1); // Obtenemos el precio del viaje
-			idViaje = rs.getInt(2); // Obtenemos el ID del viaje
-			nplazas = rs.getInt(3); // Obtenemos el número de plazas libres
-
-			if (nplazas >= nroPlazas) { // Si hay suficientes plazas disponibles
+			precio=rs.getInt(1);//Guardamos el precio viaje
+			idViaje=rs.getInt(2); //Guardamos el id del viaje
+			nplazas=rs.getInt(3); //Guardamos el numero de plazas del viaje
+			if(nplazas>=nroPlazas) {//Si hay suficiente plazas para reservar
 				try {
-					nplazas = nplazas - nroPlazas; // Restamos el número de plazas reservadas
-					// Actualizamos el número de plazas libres del viaje
-					st = con.prepareStatement("UPDATE viajes SET NPLAZASLIBRES = ? WHERE IDVIAJE = ?");
-					st.setInt(1, nplazas); // Establecemos el nuevo número de plazas libres
-					st.setInt(2, idViaje); // Establecemos el ID del viaje
-					st.executeUpdate(); // Ejecutamos la actualización
-
-					// Insertamos el nuevo ticket en la base de datos
-					st = con.prepareStatement("INSERT INTO tickets VALUES(seq_tickets.nextval, ?, CURRENT_DATE, ?, ?)");
-					st.setInt(1, idViaje); // Establecemos el ID del viaje
-					st.setInt(2, nroPlazas); // Establecemos el número de plazas reservadas
-					precio = precio * nroPlazas; // Calculamos el precio total
-					st.setInt(3, precio); // Establecemos el precio total
-					st.executeUpdate(); // Ejecutamos la inserción
-					con.commit(); // Confirmamos los cambios
-
-				} catch (SQLException e) { // En caso de error SQL
-					con.rollback(); // Hacemos rollback de la transacción
-					LOGGER.error(e.getMessage()); // Registramos el mensaje de error
-					throw (e); // Relanzamos la excepción
+					nplazas=nplazas-nroPlazas;// restamos el numero de plazas que queremos reservar
+					//preparamos una sentencia para actualizar el numero de plazas libres del viaje que hemos cogido
+					st=con.prepareStatement("UPDATE viajes SET NPLAZASLIBRES = ? WHERE IDVIAJE=?");
+					st.setInt(1, nplazas);//el nuevo numero de plazas libres
+					st.setInt(2, idViaje); //introducimos el id del viaje que se ha seleccionado
+					st.executeUpdate();//Ejecutamos la actualización de la tabla
+					//preparamos una sentencia para añadir la nueva compra de ticket
+					st=con.prepareStatement("insert into tickets values(seq_tickets.nextval,?,CURRENT_DATE,?,?)");
+					st.setInt(1, idViaje);//introducimo el id del viaje que hemos cromprado
+					st.setInt(2,nroPlazas); //introducimos cuantas plazas hemos cogido
+					precio=precio*nroPlazas; //obtenemos el precio del ticket real ya que el precio anterior era el precio por plaza
+					st.setInt(3, precio);//introducimos el precio total
+					st.executeUpdate(); //ejecutamos la actualización de la tabla
+					con.commit(); //comitemaos los cambios
+				}catch(SQLException e) {//en caso de que falle la ejecución de la sentencia  y salte un error sql
+					con.rollback();//Hacemos rollback por que ha saltado una exepción
+					LOGGER.error(e.getMessage()); //Gardamos el mensaje de error en el logger
+					st.close(); //cerramos la sentencia para liberar recursos
+					con.close(); //cerramos la conexion para liberar recursos
+					throw(e); //Volvemos a lanzar la excepción
 				}
-			} else { // Si no hay suficientes plazas disponibles
-				con.rollback(); // Hacemos rollback
-				// Creamos y lanzamos la excepción correspondiente.
-				CompraBilleteTrenException e = new CompraBilleteTrenException(CompraBilleteTrenException.NO_PLAZAS);
-				LOGGER.error(e.getMessage()); // Registramos el mensaje de error
-				throw (e);
+			}else {
+				con.rollback();//hacemos rollback ya que vamos a lanza una excepción
+				// creamos la excepción para poderla lanzas y guardar su mensaje
+				CompraBilleteTrenException e=new CompraBilleteTrenException(CompraBilleteTrenException.NO_PLAZAS);
+				LOGGER.error(e.getMessage());//Pasamos por el logger el mensaje de error
+				st.close(); //cerramos la sentencia para liberar recursos
+				con.close(); //cerramos la conexion para liberar recursos
+				throw (e);//Lanzamos la excepción que hemos creado
 			}
-		}
 
-		if (st != null) st.close(); // Cerramos la declaración preparada
-		if (con != null) con.close(); // Cerramos la conexión
+		}
+		st.close();//cerramos la sentencia para liberar recursos
+		con.close(); //cerramos la conexión para liberar recursos
+
+
 	}
 }
