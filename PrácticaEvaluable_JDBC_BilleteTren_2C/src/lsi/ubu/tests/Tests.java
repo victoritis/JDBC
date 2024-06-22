@@ -132,24 +132,24 @@ public class Tests {
 				if (st != null) st.close();
 				if (con != null) con.close();
 			} catch (SQLException e) {
-				LOGGER.error("Error al cerrar recursos.", e);
+				LOGGER.error("Error al cerrar.", e);
 			}
 		}
 	}
 
 
-	// Tests asociados a la compra de billetes de tren.
 	public void ejecutarTestsCompraBilletes() {
 
 		Servicio servicio = new ServicioImpl();
+
 		PoolDeConexiones pool = PoolDeConexiones.getInstance();
+
 		Connection con = null;
 		PreparedStatement st = null;
 		ResultSet rs = null;
 
-		// Prueba el caso de que no existe el viaje.
+		// Prueba caso no existe el viaje
 		try {
-
 			java.util.Date fecha = toDate("15/04/2010");
 			Time hora = Time.valueOf("12:00:00");
 			int nroPlazas = 3;
@@ -157,17 +157,14 @@ public class Tests {
 			servicio.comprarBillete(hora, fecha, ORIGEN, DESTINO, nroPlazas);
 
 			LOGGER.info("NO se da cuenta de que no existe el viaje MAL");
-
 		} catch (SQLException e) {
-
 			if (e.getErrorCode() == CompraBilleteTrenException.NO_EXISTE_VIAJE) {
 				LOGGER.info("Se da cuenta de que no existe el viaje OK");
 			}
 		}
 
-		// Prueba el caso de que exista el viaje pero no haya plazas.
+		// Prueba caso si existe pero no hay plazas
 		try {
-
 			java.util.Date fecha = toDate("20/04/2022");
 			Time hora = Time.valueOf("8:30:00");
 			int nroPlazas = 50;
@@ -175,18 +172,14 @@ public class Tests {
 			servicio.comprarBillete(hora, fecha, ORIGEN, DESTINO, nroPlazas);
 
 			LOGGER.info("NO se da cuenta de que no hay plazas MAL");
-
 		} catch (SQLException e) {
-
 			if (e.getErrorCode() == CompraBilleteTrenException.NO_PLAZAS) {
 				LOGGER.info("Se da cuenta de que no hay plazas OK");
 			}
-
 		}
 
-		// Prueba el caso de que exista el viaje y si hay plazas.
+		// Prueba caso si existe y si hay plazas
 		try {
-
 			java.util.Date fecha = toDate("20/04/2022");
 			Time hora = Time.valueOf("8:30:00");
 			int nroPlazas = 5;
@@ -195,7 +188,7 @@ public class Tests {
 
 			con = pool.getConnection();
 			st = con.prepareStatement(
-					" SELECT IDVIAJE||IDTREN||IDRECORRIDO||FECHA||NPLAZASLIBRES||REALIZADO||IDCONDUCTOR||IDTICKET||CANTIDAD||PRECIO "
+					" SELECT IDVIAJE||IDTREN||IDRECORRIDO||TO_CHAR(FECHA, 'DD/MM/YY')||NPLAZASLIBRES||REALIZADO||IDCONDUCTOR||IDTICKET||CANTIDAD||PRECIO "
 							+ " FROM VIAJES natural join tickets "
 							+ " where idticket=3 and trunc(fechacompra) = trunc(current_date) ");
 			rs = st.executeQuery();
@@ -204,8 +197,10 @@ public class Tests {
 			while (rs.next()) {
 				resultadoReal += rs.getString(1);
 			}
+			System.out.println("resultadoReal => " + resultadoReal);
 
 			String resultadoEsperado = "11120/04/2225113550";
+			System.out.println("resultadoEsperado => " + resultadoEsperado);
 			// LOGGER.info("R"+resultadoReal);
 			// LOGGER.info("E"+resultadoEsperado);
 			if (resultadoReal.equals(resultadoEsperado)) {
@@ -222,7 +217,7 @@ public class Tests {
 	private java.util.Date toDate(String miString) { // convierte una cadena en fecha
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy"); // Las M en mayusculas porque sino interpreta
-										// minutos!!
+			// minutos!!
 			java.util.Date fecha = sdf.parse(miString);
 			return fecha;
 		} catch (ParseException e) {
